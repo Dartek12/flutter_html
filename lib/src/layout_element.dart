@@ -32,48 +32,17 @@ class TableLayoutElement extends LayoutElement {
 
   @override
   Widget toWidget(RenderContext context) {
-    final rows = <TableRowLayoutElement>[];
-    List<TrackSize> columnSizes;
-    for (var child in children) {
-      if (child is TableStyleElement) {
-        // Map <col> tags to predetermined column track sizes
-        columnSizes = child.children.where((c) => c.name == "col").map((c) {
-          final colWidth = c.attributes["width"];
-          if (colWidth != null && colWidth.endsWith("%")) {
-            final percentageSize =
-                double.tryParse(colWidth.substring(0, colWidth.length - 1));
-            return percentageSize != null
-                ? FlexibleTrackSize(percentageSize * 0.01)
-                : FlexibleTrackSize(1);
-          } else if (colWidth != null) {
-            final fixedPxSize = double.tryParse(colWidth);
-            return fixedPxSize != null
-                ? FixedTrackSize(fixedPxSize)
-                : FlexibleTrackSize(1);
-          } else {
-            return FlexibleTrackSize(1);
-          }
-        }).toList(growable: false);
-      } else if (child is TableSectionLayoutElement) {
-        rows.addAll(child.children.whereType());
-      } else if (child is TableRowLayoutElement) {
-        rows.add(child);
-      }
-    }
-
-    // All table rows have a height intrinsic to their (spanned) contents
-    final rowSizes =
-        List.generate(rows.length, (_) => IntrinsicContentTrackSize());
-
-    // Calculate column bounds
-    int columnMax = rows
+    final rows = _getRows();
+    final int columns = rows
         .map((row) => row.children
             .whereType<TableCellElement>()
             .fold(0, (int value, child) => value + child.colspan))
         .fold(0, max);
 
+    final rowSizes = _getRowSizes(rows);
+    final columnSizes = _getColumnSizes(columns);
     final cells = <GridPlacement>[];
-    final tableGrid = _TableLayout(rows: rows.length, columns: columnMax);
+    final tableGrid = _TableLayout(rows: rows.length, columns: columns);
 
     final borderWidth = double.tryParse(attributes['border'] ?? '') ?? 1.0;
     final tableBorder = Border.all(color: Colors.black, width: borderWidth);
@@ -91,7 +60,7 @@ class TableLayoutElement extends LayoutElement {
             rowspan: child.rowspan,
             colspan: child.colspan,
             rows: rows.length,
-            columns: columnMax);
+            columns: columns);
         final color = child.style.backgroundColor ?? row.style.backgroundColor;
 
         cells.add(GridPlacement(
@@ -99,16 +68,12 @@ class TableLayoutElement extends LayoutElement {
             width: double.infinity,
             padding: child.style.padding ?? row.style.padding,
             decoration: BoxDecoration(color: color, border: border),
-            child: SizedBox.expand(
-              child: Container(
-                alignment: child.style.alignment ??
-                    style.alignment ??
-                    Alignment.centerLeft,
-                child: StyledText(
-                  textSpan: context.parser.parseTree(context, child),
-                  style: child.style,
-                ),
-              ),
+            alignment: child.style.alignment ??
+                style.alignment ??
+                Alignment.centerLeft,
+            child: StyledText(
+              textSpan: context.parser.parseTree(context, child),
+              style: child.style,
             ),
           ),
           columnStart: coli,
@@ -119,27 +84,81 @@ class TableLayoutElement extends LayoutElement {
       }
     }
 
-    final finalColumnSizes =
-        columnSizes ?? List.generate(columnMax, (_) => FlexibleTrackSize(1));
-    return Container(
-      decoration: BoxDecoration(
-        color: style.backgroundColor,
-        border: style.border,
-      ),
-      width: style.width,
-      height: style.height,
-      child: LayoutGrid(
-        gridFit: GridFit.loose,
-        templateColumnSizes: finalColumnSizes,
-        templateRowSizes: rowSizes,
-        children: cells,
-      ),
-    );
+    return LayoutBuilder(builder: (context, size) {
+      return Container(
+          decoration: BoxDecoration(
+            color: style.backgroundColor,
+            border: tableBorder,
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: LayoutGrid(
+              gridFit: GridFit.loose,
+              templateColumnSizes: columnSizes,
+              templateRowSizes: rowSizes,
+              children: cells,
+            ),
+          ));
+    });
   }
 
-  BorderSide _getBorderSide(BorderSide side, {bool keep}) {
+  List<TrackSize> _getColumnSizes(int columns) {
+    const defaultMinSize = 120.0;
+    List<TrackSize> columnSizes;
+
+    final tableStyleElement = children.firstWhere(
+        (element) => element is TableStyleElement,
+        orElse: () => null);
+
+    if (tableStyleElement != null) {
+      columnSizes =
+          tableStyleElement.children.where((c) => c.name == "col").map((c) {
+        final colWidth = c.attributes["width"];
+
+        if (colWidth == null) {
+          return FlexibleMinFallbackTrackSize(flex: 1, minSize: defaultMinSize);
+        } else if (colWidth.endsWith("%")) {
+          final percentageSize =
+              double.tryParse(colWidth.substring(0, colWidth.length - 1)) ?? 1;
+          return FlexibleMinFallbackTrackSize(
+              flex: percentageSize, minSize: defaultMinSize);
+        } else {
+          final fixedPxSize = double.tryParse(colWidth);
+          return fixedPxSize != null
+              ? FixedTrackSize(fixedPxSize)
+              : FlexibleMinFallbackTrackSize(flex: 1, minSize: defaultMinSize);
+        }
+      });
+    }
+
+    return columnSizes ??
+        List.generate(
+            columns,
+            (_) =>
+                FlexibleMinFallbackTrackSize(flex: 1, minSize: defaultMinSize));
+  }
+
+  List<TrackSize> _getRowSizes(List<TableRowLayoutElement> rows) {
+    return List.generate(rows.length, (_) => IntrinsicContentTrackSize());
+  }
+
+  List<TableRowLayoutElement> _getRows() {
+    final rows = <TableRowLayoutElement>[];
+    for (var child in children) {
+      if (child is TableSectionLayoutElement) {
+        rows.addAll(child.children.whereType());
+      } else if (child is TableRowLayoutElement) {
+        rows.add(child);
+      }
+    }
+    return rows;
+  }
+
+  BorderSide _getBorderSide(BorderSide side, {bool edge}) {
     const scaleFactor = 4.0;
-    return keep ? side : side.copyWith(width: side.width / scaleFactor);
+    return edge
+        ? BorderSide.none
+        : side.copyWith(width: side.width / scaleFactor);
   }
 
   Border _getBorder(
@@ -150,10 +169,10 @@ class TableLayoutElement extends LayoutElement {
       int colspan,
       int rows,
       int columns}) {
-    final top = _getBorderSide(base.top, keep: row == 0);
-    final left = _getBorderSide(base.left, keep: col == 0);
-    final right = _getBorderSide(base.right, keep: col + colspan == columns);
-    final bottom = _getBorderSide(base.bottom, keep: row + rowspan == rows);
+    final top = _getBorderSide(base.top, edge: row == 0);
+    final left = _getBorderSide(base.left, edge: col == 0);
+    final right = _getBorderSide(base.right, edge: col + colspan == columns);
+    final bottom = _getBorderSide(base.bottom, edge: row + rowspan == rows);
 
     return Border(top: top, left: left, right: right, bottom: bottom);
   }
@@ -342,5 +361,24 @@ class _TableLayout {
         .toBinaryString()
         .substring(0, _columns * _rows)
         .replaceAllMapped(regexp, (match) => '${match.group(0)}\n');
+  }
+}
+
+class FlexibleMinFallbackTrackSize extends FlexibleTrackSize {
+  final double minSize;
+
+  FlexibleMinFallbackTrackSize({double flex, @required this.minSize})
+      : super(flex);
+
+  @override
+  bool isFixedForConstraints(TrackType type, BoxConstraints gridConstraints) {
+    return !gridConstraints.hasBoundedWidth;
+  }
+
+  @override
+  double minIntrinsicSize(
+      TrackType type, Iterable<RenderBox> items, double measurementAxisMaxSize,
+      {double Function(RenderBox p1) crossAxisSizeForItem}) {
+    return minSize;
   }
 }
