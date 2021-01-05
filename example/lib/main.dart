@@ -60,7 +60,7 @@ const htmlData = """
       <p>
       <q>Famous quote...</q>
       </p>
-      <table>
+      <table border="2">
         <thead>
           <tr>
             <th rowspan="2">One</th>

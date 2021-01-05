@@ -75,21 +75,30 @@ class TableLayoutElement extends LayoutElement {
     final cells = <GridPlacement>[];
     final tableGrid = _TableLayout(rows: rows.length, columns: columnMax);
 
+    final borderWidth = double.tryParse(attributes['border'] ?? '') ?? 1.0;
+    final tableBorder = Border.all(color: Colors.black, width: borderWidth);
+
     for (int rowi = 0; rowi < rows.length; rowi++) {
       final row = rows[rowi];
 
       for (var child in row.children.whereType<TableCellElement>()) {
         final coli = tableGrid.put(
             row: rowi, rowspan: child.rowspan, colspan: child.colspan);
+        final border = _getBorder(
+            base: tableBorder,
+            row: rowi,
+            col: coli,
+            rowspan: child.rowspan,
+            colspan: child.colspan,
+            rows: rows.length,
+            columns: columnMax);
+        final color = child.style.backgroundColor ?? row.style.backgroundColor;
 
         cells.add(GridPlacement(
           child: Container(
             width: double.infinity,
             padding: child.style.padding ?? row.style.padding,
-            decoration: BoxDecoration(
-              color: child.style.backgroundColor ?? row.style.backgroundColor,
-              border: child.style.border ?? row.style.border,
-            ),
+            decoration: BoxDecoration(color: color, border: border),
             child: SizedBox.expand(
               child: Container(
                 alignment: child.style.alignment ??
@@ -126,6 +135,27 @@ class TableLayoutElement extends LayoutElement {
         children: cells,
       ),
     );
+  }
+
+  BorderSide _getBorderSide(BorderSide side, {bool keep}) {
+    const scaleFactor = 4.0;
+    return keep ? side : side.copyWith(width: side.width / scaleFactor);
+  }
+
+  Border _getBorder(
+      {Border base,
+      int row,
+      int col,
+      int rowspan,
+      int colspan,
+      int rows,
+      int columns}) {
+    final top = _getBorderSide(base.top, keep: row == 0);
+    final left = _getBorderSide(base.left, keep: col == 0);
+    final right = _getBorderSide(base.right, keep: col + colspan == columns);
+    final bottom = _getBorderSide(base.bottom, keep: row + rowspan == rows);
+
+    return Border(top: top, left: left, right: right, bottom: bottom);
   }
 }
 
