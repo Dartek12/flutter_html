@@ -61,11 +61,6 @@ const htmlData = """
       <q>Famous quote...</q>
       </p>
       <table>
-        <colgroup>
-          <col width="50%" />
-          <col width="25%" />
-          <col width="25%" />
-        </colgroup>
         <thead>
           <tr>
             <th rowspan="2">One</th>
@@ -73,15 +68,15 @@ const htmlData = """
             <th colspan="3">Three</th>
             <th rowspan="2">Four</th>
           </tr>
+          <tr>
+            <th>3.1</th>
+            <th>3.2</th>
+            <th>3.3</th>
+          </tr>
         </thead>
         <tbody>
           <tr>
-            <td>3.1</td>
-            <td>3.2</td>
-            <td>3.3</td>
-          </tr>
-          <tr>
-            <td rowspan='2'>Rowspan\nRowspan\nRowspan\nRowspan\nRowspan\nRowspan\nRowspan\nRowspan\nRowspan\nRowspan</td>
+            <td rowspan='2' style='color: red;'>Rowspan\nRowspan\nRowspan\nRowspan\nRowspan\nRowspan\nRowspan\nRowspan\nRowspan\nRowspan</td>
             <td>Data</td>
             <td>Data</td>
             <td>Data</td>
@@ -90,7 +85,6 @@ const htmlData = """
           </tr>
           <tr>
             <td colspan="2"><img alt='Google' src='https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png' /></td>
-            <td>Data</td>
             <td>Data</td>
             <td>Data</td>
             <td>Data</td>
@@ -104,6 +98,7 @@ const htmlData = """
           </tr>
         </tfoot>
       </table>
+
       <h3>Custom Element Support:</h3>
       <flutter></flutter>
       <flutter horizontal></flutter>

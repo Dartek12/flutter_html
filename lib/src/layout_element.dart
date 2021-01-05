@@ -6,6 +6,7 @@ import 'package:flutter_html/src/html_elements.dart';
 import 'package:flutter_html/src/styled_element.dart';
 import 'package:flutter_html/style.dart';
 import 'package:flutter_layout_grid/flutter_layout_grid.dart';
+import 'package:bit_array/bit_array.dart';
 import 'package:html/dom.dart' as dom;
 
 /// A [LayoutElement] is an element that breaks the normal Inline flow of
@@ -72,46 +73,41 @@ class TableLayoutElement extends LayoutElement {
         .fold(0, max);
 
     final cells = <GridPlacement>[];
-    final columnRowOffset = List.generate(columnMax + 1, (_) => 0);
-    int rowi = 0;
-    for (var row in rows) {
-      int columni = 0;
-      for (var child in row.children) {
-        if (columnRowOffset[columni] > 0) {
-          columnRowOffset[columni] = columnRowOffset[columni] - 1;
-          columni++;
-        }
-        if (child is TableCellElement) {
-          cells.add(GridPlacement(
-            child: Container(
-              width: double.infinity,
-              padding: child.style.padding ?? row.style.padding,
-              decoration: BoxDecoration(
-                color: child.style.backgroundColor ?? row.style.backgroundColor,
-                border: child.style.border ?? row.style.border,
-              ),
-              child: SizedBox.expand(
-                child: Container(
-                  alignment: child.style.alignment ??
-                      style.alignment ??
-                      Alignment.centerLeft,
-                  child: StyledText(
-                    textSpan: context.parser.parseTree(context, child),
-                    style: child.style,
-                  ),
+    final tableGrid = _TableLayout(rows: rows.length, columns: columnMax);
+
+    for (int rowi = 0; rowi < rows.length; rowi++) {
+      final row = rows[rowi];
+
+      for (var child in row.children.whereType<TableCellElement>()) {
+        final coli = tableGrid.put(
+            row: rowi, rowspan: child.rowspan, colspan: child.colspan);
+
+        cells.add(GridPlacement(
+          child: Container(
+            width: double.infinity,
+            padding: child.style.padding ?? row.style.padding,
+            decoration: BoxDecoration(
+              color: child.style.backgroundColor ?? row.style.backgroundColor,
+              border: child.style.border ?? row.style.border,
+            ),
+            child: SizedBox.expand(
+              child: Container(
+                alignment: child.style.alignment ??
+                    style.alignment ??
+                    Alignment.centerLeft,
+                child: StyledText(
+                  textSpan: context.parser.parseTree(context, child),
+                  style: child.style,
                 ),
               ),
             ),
-            columnStart: columni,
-            columnSpan: child.colspan,
-            rowStart: rowi,
-            rowSpan: child.rowspan,
-          ));
-          columnRowOffset[columni] = child.rowspan - 1;
-          columni += child.colspan;
-        }
+          ),
+          columnStart: coli,
+          columnSpan: child.colspan,
+          rowStart: rowi,
+          rowSpan: child.rowspan,
+        ));
       }
-      rowi++;
     }
 
     final finalColumnSizes =
@@ -262,5 +258,59 @@ LayoutElement parseLayoutElement(
       break;
     default:
       return TableLayoutElement(children: children);
+  }
+}
+
+class _TableLayout {
+  final int _rows;
+  final int _columns;
+  final BitArray _array;
+
+  _TableLayout({@required int rows, @required int columns})
+      : _rows = rows,
+        _columns = columns,
+        _array = BitArray(rows * columns);
+
+  int put({@required int row, @required int rowspan, @required int colspan}) {
+    rowspan = max(1, rowspan);
+    colspan = max(1, colspan);
+
+    final int start = row * _columns;
+    final int end = (row + 1) * _columns;
+
+    for (int i = start; i < end; i++) {
+      if (!_array[i]) {
+        final column = i - start;
+        _reserve(row: row, column: column, rowspan: rowspan, colspan: colspan);
+        return column;
+      }
+    }
+
+    throw 'No place to put cell';
+  }
+
+  void _reserve(
+      {@required int row,
+      @required int column,
+      @required int rowspan,
+      @required int colspan}) {
+    assert(column + colspan <= _columns);
+    assert(row + rowspan <= _rows);
+
+    for (int i = 0; i < rowspan; i++) {
+      int index = (row + i) * _columns + column;
+      for (int j = 0; j < colspan; j++, index++) {
+        _array.setBit(index);
+      }
+    }
+  }
+
+  @override
+  String toString() {
+    final regexp = RegExp('(0|1){$_columns}');
+    return _array
+        .toBinaryString()
+        .substring(0, _columns * _rows)
+        .replaceAllMapped(regexp, (match) => '${match.group(0)}\n');
   }
 }

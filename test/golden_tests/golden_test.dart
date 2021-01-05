@@ -1,4 +1,4 @@
-@Skip("No run")
+@Skip("Goldens")
 
 import 'package:flutter_test/flutter_test.dart';
 

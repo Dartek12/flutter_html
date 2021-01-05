@@ -18,6 +18,9 @@ dependencies:
   # Plugins for rendering the <table> tag.
   flutter_layout_grid: ^0.10.2
 
+  # Plugin for <table> tag implementation
+  bit_array: ^2.0.0
+
   # Plugins for rendering the <video> tag.
   video_player: ^1.0.1
   chewie: ^0.12.0
