@@ -11,6 +11,7 @@
 .packages
 .pub-cache/
 .pub/
+**/failures/*.png
 build/
 pubspec.lock
 # Android related

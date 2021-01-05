@@ -260,9 +260,8 @@ class Style {
       listStyleType: other.listStyleType,
       listStylePosition: other.listStylePosition,
       padding: other.padding,
-      //TODO merge EdgeInsets
+      // TODO merge EdgeInsets
       margin: other.margin,
-      //TODO merge EdgeInsets
       textAlign: other.textAlign,
       textDecoration: other.textDecoration,
       textDecorationColor: other.textDecorationColor,

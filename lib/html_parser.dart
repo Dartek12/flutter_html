@@ -136,7 +136,7 @@ class HtmlParser extends StatelessWidget {
       ));
     });
 
-    //TODO(Sub6Resources): There's probably a more efficient way to look this up.
+    // TODO(Sub6Resources): There's probably a more efficient way to look this up.
     if (node is dom.Element) {
       if (blacklistedElements?.contains(node.localName) ?? false) {
         return EmptyContentElement();
