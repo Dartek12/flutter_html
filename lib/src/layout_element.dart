@@ -13,22 +13,34 @@ import 'package:html/dom.dart' as dom;
 /// an html document with a more complex layout. LayoutElements handle
 abstract class LayoutElement extends StyledElement {
   LayoutElement({
+    String elementId,
     String name,
     List<StyledElement> children,
     Style style,
     dom.Element node,
-  }) : super(name: name, children: children, style: style, node: node);
+  }) : super(
+            elementId: elementId,
+            name: name,
+            children: children,
+            style: style,
+            node: node);
 
   Widget toWidget(RenderContext context);
 }
 
 class TableLayoutElement extends LayoutElement {
   TableLayoutElement({
+    String elementId,
     String name,
     Style style,
     @required List<StyledElement> children,
     dom.Element node,
-  }) : super(name: name, style: style, children: children, node: node);
+  }) : super(
+            elementId: elementId,
+            name: name,
+            style: style,
+            children: children,
+            node: node);
 
   @override
   Widget toWidget(RenderContext context) {
@@ -285,6 +297,7 @@ LayoutElement parseLayoutElement(
   switch (element.localName) {
     case "table":
       return TableLayoutElement(
+        elementId: element.id,
         name: element.localName,
         children: children,
         node: element,
@@ -376,8 +389,7 @@ class FlexibleMinFallbackTrackSize extends FlexibleTrackSize {
   }
 
   @override
-  double minIntrinsicSize(
-      TrackType type, Iterable<RenderBox> items, double measurementAxisMaxSize,
+  double minIntrinsicSize(TrackType type, Iterable<RenderBox> items,
       {double Function(RenderBox p1) crossAxisSizeForItem}) {
     return minSize;
   }

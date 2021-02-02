@@ -35,6 +35,10 @@ const htmlData = """
 <h4>Header 4</h4>
 <h5>Header 5</h5>
 <h6>Header 6</h6>
+<a href="#table">Table</a>
+<a href="#flutter-logo">Flutter logo</a>
+<a href="#video">Video</a>
+<a href="#webview">WebView</a>
 <h3>Ruby Support:</h3>
       <p>
         <ruby>
@@ -61,7 +65,7 @@ const htmlData = """
       <q>Famous quote...</q>
       </p>
 
-      <table border="2">
+      <table id="table" border="2">
         <thead>
           <tr style="height: 50px;">
             <th rowspan="2">One</th>
@@ -101,7 +105,7 @@ const htmlData = """
       </table>
 
       <h3>Custom Element Support:</h3>
-      <flutter></flutter>
+      <flutter id="flutter-logo"></flutter>
       <flutter horizontal></flutter>
       <h3>SVG support:</h3>
       <svg id='svg1' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'>
@@ -144,18 +148,27 @@ const htmlData = """
         <img alt='Alt Text of an intentionally broken image' src='https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30d' />
       </p>
       <h3>Video support:</h3>
-      <video controls>
+
+      <video id="video" controls>
         <source src="https://www.w3schools.com/html/mov_bbb.mp4" />
       </video>
       <h3>Audio support:</h3>
-      <audio controls>
+      <audio id="link-support" controls>
         <source src="https://www.w3schools.com/html/mov_bbb.mp4" />
       </audio>
       <h3>IFrame support:</h3>
-      <iframe src="https://google.com"></iframe>
+      <iframe id="webview" src="https://google.com"></iframe>
 """;
 
 class _MyHomePageState extends State<MyHomePage> {
+  final _controller = HtmlController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -165,6 +178,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: SingleChildScrollView(
         child: Html(
+          controller: _controller,
           data: htmlData,
           //Optional parameters:
           style: {
@@ -204,6 +218,10 @@ class _MyHomePageState extends State<MyHomePage> {
           },
           onLinkTap: (url) {
             print("Opening $url...");
+            if (url.isNotEmpty && url[0] == '#') {
+              _controller.scrollTo(url.substring(1),
+                  duration: const Duration(seconds: 1));
+            }
           },
           onImageTap: (src) {
             print(src);

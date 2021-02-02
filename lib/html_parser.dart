@@ -14,6 +14,8 @@ import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as htmlparser;
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'src/styled_element.dart';
+
 typedef OnTap = void Function(String url);
 typedef CustomRender = Widget Function(
   RenderContext context,
@@ -229,11 +231,16 @@ class HtmlParser extends StatelessWidget {
     return tree;
   }
 
-  /// [parseTree] converts a tree of [StyledElement]s to an [InlineSpan] tree.
-  ///
-  /// [parseTree] is responsible for handling the [customRender] parameter and
-  /// deciding what different `Style.display` options look like as Widgets.
   InlineSpan parseTree(RenderContext context, StyledElement tree) {
+    return WidgetSpan(
+        child: MarkerSpan(child: _parseTree(context, tree), element: tree));
+  }
+
+  /// [_parseTree] converts a tree of [StyledElement]s to an [InlineSpan] tree.
+  ///
+  /// [_parseTree] is responsible for handling the [customRender] parameter and
+  /// deciding what different `Style.display` options look like as Widgets.
+  InlineSpan _parseTree(RenderContext context, StyledElement tree) {
     // Merge this element's style into the context so that children
     // inherit the correct style
     RenderContext newContext = RenderContext(
@@ -688,6 +695,25 @@ class RenderContext {
     this.parser,
     this.style,
   });
+}
+
+/// A [MarkerSpan] is a widget that wraps an [InlineSpan].
+class MarkerSpan extends StatelessWidget {
+  final InlineSpan child;
+  final StyledElement element;
+
+  const MarkerSpan({Key key, @required this.child, @required this.element})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+        opacity: 1.0,
+        child: StyledText(
+          textSpan: child,
+          style: element.style,
+        ));
+  }
 }
 
 /// A [ContainerSpan] is a widget with an [InlineSpan] child or children.

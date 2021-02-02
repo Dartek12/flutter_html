@@ -27,9 +27,15 @@ abstract class ReplacedElement extends StyledElement {
   ReplacedElement(
       {String name,
       Style style,
+      String elementId,
       dom.Element node,
       this.alignment = PlaceholderAlignment.aboveBaseline})
-      : super(name: name, children: null, style: style, node: node);
+      : super(
+            name: name,
+            elementId: elementId,
+            children: null,
+            style: style,
+            node: node);
 
   static List<String> parseMediaSources(List<dom.Element> elements) {
     return elements
@@ -47,9 +53,10 @@ class TextContentElement extends ReplacedElement {
   String text;
 
   TextContentElement({
+    String elementId,
     Style style,
     this.text,
-  }) : super(name: "[text]", style: style);
+  }) : super(elementId: elementId, name: "[text]", style: style);
 
   @override
   String toString() {
@@ -67,12 +74,14 @@ class ImageContentElement extends ReplacedElement {
   final String alt;
 
   ImageContentElement({
+    String elementId,
     String name,
     Style style,
     this.src,
     this.alt,
     dom.Element node,
   }) : super(
+          elementId: elementId,
           name: name,
           style: style,
           node: node,
@@ -138,16 +147,15 @@ class ImageContentElement extends ReplacedElement {
         }
       });
       image.image.resolve(ImageConfiguration()).addListener(
-        ImageStreamListener(
-              (ImageInfo image, bool synchronousCall) {
-            var myImage = image.image;
-            Size size = Size(myImage.width.toDouble(), myImage.height.toDouble());
-            completer.complete(size);
-          }, onError: (object, stacktrace) {
-            completer.completeError(object);
-          }
-        ),
-      );
+            ImageStreamListener((ImageInfo image, bool synchronousCall) {
+              var myImage = image.image;
+              Size size =
+                  Size(myImage.width.toDouble(), myImage.height.toDouble());
+              completer.complete(size);
+            }, onError: (object, stacktrace) {
+              completer.completeError(object);
+            }),
+          );
       imageWidget = FutureBuilder<Size>(
         future: completer.future,
         builder: (BuildContext buildContext, AsyncSnapshot<Size> snapshot) {
@@ -158,7 +166,8 @@ class ImageContentElement extends ReplacedElement {
               height: snapshot.data.height,
               frameBuilder: (ctx, child, frame, _) {
                 if (frame == null) {
-                  return Text(alt ?? "", style: context.style.generateTextStyle());
+                  return Text(alt ?? "",
+                      style: context.style.generateTextStyle());
                 }
                 return child;
               },
@@ -200,6 +209,7 @@ class IframeContentElement extends ReplacedElement {
   final NavigationDelegate navigationDelegate;
 
   IframeContentElement({
+    String elementId,
     String name,
     Style style,
     this.src,
@@ -207,7 +217,7 @@ class IframeContentElement extends ReplacedElement {
     this.height,
     dom.Element node,
     this.navigationDelegate,
-  }) : super(name: name, style: style, node: node);
+  }) : super(elementId: elementId, name: name, style: style, node: node);
 
   @override
   Widget toWidget(RenderContext context) {
@@ -236,6 +246,7 @@ class AudioContentElement extends ReplacedElement {
 
   AudioContentElement({
     String name,
+    String elementId,
     Style style,
     this.src,
     this.showControls,
@@ -243,7 +254,7 @@ class AudioContentElement extends ReplacedElement {
     this.loop,
     this.muted,
     dom.Element node,
-  }) : super(name: name, style: style, node: node);
+  }) : super(name: name, elementId: elementId, style: style, node: node);
 
   @override
   Widget toWidget(RenderContext context) {
@@ -276,6 +287,7 @@ class VideoContentElement extends ReplacedElement {
   final double height;
 
   VideoContentElement({
+    String elementId,
     String name,
     Style style,
     this.src,
@@ -287,7 +299,7 @@ class VideoContentElement extends ReplacedElement {
     this.width,
     this.height,
     dom.Element node,
-  }) : super(name: name, style: style, node: node);
+  }) : super(elementId: elementId, name: name, style: style, node: node);
 
   @override
   Widget toWidget(RenderContext context) {
@@ -320,10 +332,11 @@ class SvgContentElement extends ReplacedElement {
   final double height;
 
   SvgContentElement({
+    String elementId,
     this.data,
     this.width,
     this.height,
-  });
+  }) : super(elementId: elementId);
 
   @override
   Widget toWidget(RenderContext context) {
@@ -345,8 +358,11 @@ class EmptyContentElement extends ReplacedElement {
 class RubyElement extends ReplacedElement {
   dom.Element element;
 
-  RubyElement({@required this.element, String name = "ruby"})
-      : super(name: name, alignment: PlaceholderAlignment.middle);
+  RubyElement({String elementId, @required this.element, String name = "ruby"})
+      : super(
+            elementId: elementId,
+            name: name,
+            alignment: PlaceholderAlignment.middle);
 
   @override
   Widget toWidget(RenderContext context) {
@@ -403,6 +419,7 @@ ReplacedElement parseReplacedElement(
         ...ReplacedElement.parseMediaSources(element.children),
       ];
       return AudioContentElement(
+        elementId: element.id,
         name: "audio",
         src: sources,
         showControls: element.attributes['controls'] != null,
@@ -413,11 +430,13 @@ ReplacedElement parseReplacedElement(
       );
     case "br":
       return TextContentElement(
+        elementId: element.id,
         text: "\n",
         style: Style(whiteSpace: WhiteSpace.PRE),
       );
     case "iframe":
       return IframeContentElement(
+        elementId: element.id,
         name: "iframe",
         src: element.attributes['src'],
         width: double.tryParse(element.attributes['width'] ?? ""),
@@ -426,6 +445,7 @@ ReplacedElement parseReplacedElement(
       );
     case "img":
       return ImageContentElement(
+        elementId: element.id,
         name: "img",
         src: element.attributes['src'],
         alt: element.attributes['alt'],
@@ -437,6 +457,7 @@ ReplacedElement parseReplacedElement(
         ...ReplacedElement.parseMediaSources(element.children),
       ];
       return VideoContentElement(
+        elementId: element.id,
         name: "video",
         src: sources,
         poster: element.attributes['poster'],
@@ -450,12 +471,14 @@ ReplacedElement parseReplacedElement(
       );
     case "svg":
       return SvgContentElement(
+        elementId: element.id,
         data: element.outerHtml,
         width: double.tryParse(element.attributes['width'] ?? ""),
         height: double.tryParse(element.attributes['height'] ?? ""),
       );
     case "ruby":
       return RubyElement(
+        elementId: element.id,
         element: element,
       );
     default:

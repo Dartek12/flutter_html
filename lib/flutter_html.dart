@@ -1,11 +1,12 @@
 library flutter_html;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_html/html_parser.dart';
 import 'package:flutter_html/style.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class Html extends StatelessWidget {
+class Html extends StatefulWidget {
   /// The `Html` widget takes HTML as input and displays a RichText
   /// tree of the parsed HTML content.
   ///
@@ -39,6 +40,7 @@ class Html extends StatelessWidget {
     this.onImageError,
     this.shrinkWrap = false,
     this.onImageTap,
+    this.controller,
     this.blacklistedElements = const [],
     this.style,
     this.navigationDelegateForIframe,
@@ -49,9 +51,13 @@ class Html extends StatelessWidget {
   final ImageErrorListener onImageError;
   final bool shrinkWrap;
 
+  /// Controller for manipulating content.
+  final HtmlController controller;
+
   /// Properties for the Image widget that gets rendered by the rich text parser
   final OnTap onImageTap;
 
+  /// List of blacklisted elements
   final List<String> blacklistedElements;
 
   /// Either return a custom widget for specific node types or return null to
@@ -67,22 +73,95 @@ class Html extends StatelessWidget {
   final NavigationDelegate navigationDelegateForIframe;
 
   @override
+  _HtmlState createState() => _HtmlState();
+}
+
+class _HtmlState extends State<Html> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller?._state = this;
+  }
+
+  @override
+  void didUpdateWidget(covariant Html oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    oldWidget.controller?._state = null;
+    widget.controller?._state = this;
+  }
+
+  @override
+  void dispose() {
+    widget.controller?._state = null;
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final double width = shrinkWrap ? null : MediaQuery.of(context).size.width;
+    final double width =
+        widget.shrinkWrap ? null : MediaQuery.of(context).size.width;
 
     return Container(
       width: width,
       child: HtmlParser(
-        htmlData: data,
-        onLinkTap: onLinkTap,
-        onImageTap: onImageTap,
-        onImageError: onImageError,
-        shrinkWrap: shrinkWrap,
-        style: style,
-        customRender: customRender,
-        blacklistedElements: blacklistedElements,
-        navigationDelegateForIframe: navigationDelegateForIframe,
+        htmlData: widget.data,
+        onLinkTap: widget.onLinkTap,
+        onImageTap: widget.onImageTap,
+        onImageError: widget.onImageError,
+        shrinkWrap: widget.shrinkWrap,
+        style: widget.style,
+        customRender: widget.customRender,
+        blacklistedElements: widget.blacklistedElements,
+        navigationDelegateForIframe: widget.navigationDelegateForIframe,
       ),
     );
   }
 }
+
+class HtmlController {
+  _HtmlState _state;
+
+  void scrollTo(String id,
+      {Duration duration = Duration.zero,
+      double alignment = 0.0,
+      Curve curve = Curves.ease,
+      ScrollPositionAlignmentPolicy alignmentPolicy =
+          ScrollPositionAlignmentPolicy.explicit}) {
+    final context = _state?.context;
+    if (context == null) {
+      return;
+    }
+
+    bool found = false;
+
+    void visitor(Element element) {
+      final markerWidget = cast<MarkerSpan>(element.widget);
+
+      if (markerWidget != null) {
+        if (markerWidget.element.elementId == id) {
+          found = true;
+          Scrollable.ensureVisible(element,
+              duration: duration,
+              curve: curve,
+              alignment: alignment,
+              alignmentPolicy: alignmentPolicy);
+          return;
+        }
+      }
+
+      if (found) {
+        return;
+      }
+
+      element.visitChildren(visitor);
+    }
+
+    context.visitChildElements(visitor);
+  }
+
+  void dispose() {
+    _state = null;
+  }
+}
+
+T cast<T>(x) => x is T ? x : null;
