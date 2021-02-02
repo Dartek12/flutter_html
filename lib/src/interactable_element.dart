@@ -8,12 +8,18 @@ class InteractableElement extends StyledElement {
   String href;
 
   InteractableElement({
+    String elementId,
     String name,
     List<StyledElement> children,
     Style style,
     this.href,
     dom.Node node,
-  }) : super(name: name, children: children, style: style, node: node);
+  }) : super(
+            elementId: elementId,
+            name: name,
+            children: children,
+            style: style,
+            node: node);
 }
 
 /// A [Gesture] indicates the type of interaction by a user.
@@ -24,6 +30,7 @@ enum Gesture {
 InteractableElement parseInteractableElement(
     dom.Element element, List<StyledElement> children) {
   InteractableElement interactableElement = InteractableElement(
+    elementId: element.id,
     name: element.localName,
     children: children,
     node: element,
