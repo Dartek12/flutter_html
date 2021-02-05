@@ -18,7 +18,13 @@ Style declarationsToStyle(Map<String, List<css.Expression>> declarations) {
       case 'text-align':
         style.textAlign = ExpressionMapping.expressionToTextAlign(value.first);
         break;
-
+      case 'text-decoration':
+        style.textDecoration =
+            ExpressionMapping.expressionToTextDecoration(value.first);
+        break;
+      case 'font-size':
+        style.fontSize = ExpressionMapping.expressionToFontSize(value.first);
+        break;
     }
   });
   return style;
@@ -112,7 +118,7 @@ class ExpressionMapping {
 
   static TextAlign expressionToTextAlign(css.Expression value) {
     if (value is css.LiteralTerm) {
-      switch(value.text) {
+      switch (value.text) {
         case "center":
           return TextAlign.center;
         case "left":
@@ -128,5 +134,27 @@ class ExpressionMapping {
       }
     }
     return TextAlign.start;
+  }
+
+  static TextDecoration expressionToTextDecoration(css.Expression value) {
+    if (value is css.LiteralTerm) {
+      switch (value.text) {
+        case "underline":
+          return TextDecoration.underline;
+        case "overline":
+          return TextDecoration.overline;
+        case "line-through":
+          return TextDecoration.lineThrough;
+      }
+    }
+    return TextDecoration.none;
+  }
+
+  static FontSize expressionToFontSize(css.Expression value) {
+    if (value is css.LengthTerm) {
+      final num size = value.value;
+      return FontSize(size.toDouble());
+    }
+    return FontSize.medium;
   }
 }
