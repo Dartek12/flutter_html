@@ -21,6 +21,9 @@ dependencies:
   # Plugin for <table> tag implementation
   bit_array: ^2.0.0
 
+  # Plugin for <ol> with list style type roman
+  numerus: ^1.0.3
+
   # Plugins for rendering the <video> tag.
   video_player: ^1.0.1
   chewie: ^0.12.0

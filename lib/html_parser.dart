@@ -491,14 +491,10 @@ class HtmlParser extends StatelessWidget {
     if (tree.name == 'ol') {
       olStack.add(Context(0));
     } else if (tree.style.display == Display.LIST_ITEM) {
-      switch (tree.style.listStyleType) {
-        case ListStyleType.DISC:
-          tree.style.markerContent = '•';
-          break;
-        case ListStyleType.DECIMAL:
-          olStack.last.data += 1;
-          tree.style.markerContent = '${olStack.last.data}.';
-      }
+      olStack.last.data += 1;
+      tree.style.markerContent =
+          tree.style.listStyleType?.call(olStack.last.data) ??
+              tree.style.markerContent;
     }
 
     tree.children?.forEach((e) => _processListCharactersRecursive(e, olStack));

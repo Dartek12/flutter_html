@@ -96,7 +96,6 @@ StyledElement parseStyledElement(
       );
       break;
     case "blockquote":
-      //TODO(Sub6Resources) this is a workaround for collapsing margins. Remove.
       if (element.parent.localName == "blockquote") {
         styledElement.style = Style(
           margin: const EdgeInsets.only(left: 40.0, right: 40.0, bottom: 14.0),
@@ -282,24 +281,9 @@ StyledElement parseStyledElement(
       break;
     case "ol":
     case "ul":
-      //TODO(Sub6Resources): This is a workaround for collapsed margins. Remove.
-      if (element.parent.localName == "li") {
-        styledElement.style = Style(
-//          margin: EdgeInsets.only(left: 30.0),
-          display: Display.BLOCK,
-          listStyleType: element.localName == "ol"
-              ? ListStyleType.DECIMAL
-              : ListStyleType.DISC,
-        );
-      } else {
-        styledElement.style = Style(
-//          margin: EdgeInsets.only(left: 30.0, top: 14.0, bottom: 14.0),
-          display: Display.BLOCK,
-          listStyleType: element.localName == "ol"
-              ? ListStyleType.DECIMAL
-              : ListStyleType.DISC,
-        );
-      }
+      styledElement.style = Style(
+        display: Display.BLOCK,
+      );
       break;
     case "p":
       styledElement.style = Style(

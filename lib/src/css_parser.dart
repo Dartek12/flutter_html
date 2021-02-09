@@ -25,6 +25,10 @@ Style declarationsToStyle(Map<String, List<css.Expression>> declarations) {
       case 'font-size':
         style.fontSize = ExpressionMapping.expressionToFontSize(value.first);
         break;
+      case 'list-style-type':
+        style.listStyleType =
+            ExpressionMapping.expressionToListStyleType(value.first);
+        break;
     }
   });
   return style;
@@ -156,5 +160,19 @@ class ExpressionMapping {
       return FontSize(size.toDouble());
     }
     return FontSize.medium;
+  }
+
+  static ListStyleType expressionToListStyleType(css.Expression value) {
+    if (value is css.LiteralTerm) {
+      switch (value.text) {
+        case "decimal":
+          return ListStyleTypes.decimal;
+        case "upper-roman":
+          return ListStyleTypes.upperRoman;
+        case "upper-roman":
+          return ListStyleTypes.upperRoman;
+      }
+    }
+    return ListStyleTypes.disc;
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:numerus/numerus.dart';
 
 ///This class represents all the available CSS attributes
 ///for this package.
@@ -426,9 +427,17 @@ class FontSize {
   static const larger = FontSize(-1.2);
 }
 
-enum ListStyleType {
-  DISC,
-  DECIMAL,
+typedef ListStyleType = String Function(int number);
+
+abstract class ListStyleTypes {
+  const ListStyleTypes._();
+
+  static ListStyleType disc = (_) => '•';
+  static ListStyleType decimal = (number) => '$number.';
+  static ListStyleType upperRoman =
+      (number) => '${number.toRomanNumeralString()}.';
+  static ListStyleType lowerRoman =
+      (number) => '${number.toRomanNumeralString().toLowerCase()}';
 }
 
 enum ListStylePosition {
