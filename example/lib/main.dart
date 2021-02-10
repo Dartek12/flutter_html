@@ -39,6 +39,7 @@ const htmlData = """
 <a href="#flutter-logo">Flutter logo</a>
 <a href="#video">Video</a>
 <a href="#webview">WebView</a>
+<a href="#lists">Lists</a>
 <h3>Ruby Support:</h3>
       <p>
         <ruby>
@@ -128,7 +129,7 @@ const htmlData = """
             <circle r="32" cx="50" cy="35" fill="#00F" opacity="0.5"/>
       </svg>
       <h3>List support:</h3>
-      <ol>
+      <ol id="lists">
             <li>This</li>
             <li><p>is</p></li>
             <li>an</li>
@@ -142,6 +143,10 @@ const htmlData = """
             <ol>
             <li>With a nested</li>
             <li>ordered list.</li>
+            </ol>
+            <ol style="list-style-type: upper-roman;">
+            <li>With a nested</li>
+            <li><b>roman ordered list.</b></li>
             </ol>
             </li>
             <li>list</li>

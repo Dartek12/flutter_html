@@ -167,8 +167,8 @@ class ExpressionMapping {
       switch (value.text) {
         case "decimal":
           return ListStyleTypes.decimal;
-        case "upper-roman":
-          return ListStyleTypes.upperRoman;
+        case "lower-roman":
+          return ListStyleTypes.lowerRoman;
         case "upper-roman":
           return ListStyleTypes.upperRoman;
       }

@@ -505,18 +505,26 @@ class HtmlParser extends StatelessWidget {
   /// bullet all list items according to the [ListStyleType] they have been given.
   static StyledElement _processListCharactersRecursive(
       StyledElement tree, ListQueue<Context<int>> olStack) {
-    if (tree.name == 'ol') {
+    final isList = tree.name == 'ol' || tree.name == 'ul';
+    if (isList) {
+      final listStyleType = tree.style.listStyleType ??
+          (tree.name == 'ol' ? ListStyleTypes.decimal : ListStyleTypes.disc);
+      tree.children.forEach((child) {
+        child.style.listStyleType = listStyleType;
+      });
+
       olStack.add(Context(0));
-    } else if (tree.style.display == Display.LIST_ITEM) {
+    }
+
+    if (tree.style.display == Display.LIST_ITEM) {
       olStack.last.data += 1;
       tree.style.markerContent =
-          tree.style.listStyleType?.call(olStack.last.data) ??
-              tree.style.markerContent;
+          tree.style.listStyleType?.call(olStack.last.data) ?? '';
     }
 
     tree.children?.forEach((e) => _processListCharactersRecursive(e, olStack));
 
-    if (tree.name == 'ol') {
+    if (isList) {
       olStack.removeLast();
     }
 
