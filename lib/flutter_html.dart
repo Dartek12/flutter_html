@@ -7,6 +7,8 @@ import 'package:flutter_html/src/element_marker.dart';
 import 'package:flutter_html/style.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'src/css_parser.dart';
+
 class Html extends StatefulWidget {
   /// The `Html` widget takes HTML as input and displays a RichText
   /// tree of the parsed HTML content.
@@ -44,6 +46,7 @@ class Html extends StatefulWidget {
     this.controller,
     this.blacklistedElements = const [],
     this.style,
+    this.shouldPreventInlineStyle,
     this.navigationDelegateForIframe,
   }) : super(key: key);
 
@@ -67,6 +70,8 @@ class Html extends StatefulWidget {
 
   /// Fancy New Parser parameters
   final Map<String, Style> style;
+
+  final ShouldPreventInlineStyle shouldPreventInlineStyle;
 
   /// Decides how to handle a specific navigation request in the WebView of an
   /// Iframe. It's necessary to use the webview_flutter package inside the app
@@ -113,6 +118,7 @@ class _HtmlState extends State<Html> {
         style: widget.style,
         customRender: widget.customRender,
         blacklistedElements: widget.blacklistedElements,
+        shouldPreventInlineStyle: widget.shouldPreventInlineStyle,
         navigationDelegateForIframe: widget.navigationDelegateForIframe,
       ),
     );

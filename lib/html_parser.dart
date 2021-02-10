@@ -35,6 +35,7 @@ class HtmlParser extends StatelessWidget {
   final Map<String, Style> style;
   final Map<String, CustomRender> customRender;
   final List<String> blacklistedElements;
+  final ShouldPreventInlineStyle shouldPreventInlineStyle;
   final NavigationDelegate navigationDelegateForIframe;
 
   HtmlParser({
@@ -46,6 +47,7 @@ class HtmlParser extends StatelessWidget {
     this.style,
     this.customRender,
     this.blacklistedElements,
+    this.shouldPreventInlineStyle,
     this.navigationDelegateForIframe,
   });
 
@@ -59,7 +61,8 @@ class HtmlParser extends StatelessWidget {
       navigationDelegateForIframe,
     );
     StyledElement styledTree = applyCSS(lexedTree);
-    StyledElement inlineStyledTree = applyInlineStyles(styledTree);
+    StyledElement inlineStyledTree =
+        applyInlineStyles(styledTree, shouldPreventInlineStyle);
     StyledElement customStyledTree = _applyCustomStyles(inlineStyledTree);
     StyledElement cascadedStyledTree = _cascadeStyles(customStyledTree);
     StyledElement cleanedTree = cleanTree(cascadedStyledTree);
@@ -180,12 +183,16 @@ class HtmlParser extends StatelessWidget {
     return tree;
   }
 
-  static StyledElement applyInlineStyles(StyledElement tree) {
+  static StyledElement applyInlineStyles(
+      StyledElement tree, ShouldPreventInlineStyle shouldPreventInlineStyle) {
     if (tree.attributes.containsKey("style")) {
-      tree.style = tree.style.merge(inlineCSSToStyle(tree.attributes['style']));
+      tree.style = tree.style.merge(inlineCSSToStyle(
+          tree, tree.attributes['style'],
+          shouldPreventInlineStyle: shouldPreventInlineStyle));
     }
 
-    tree.children?.forEach(applyInlineStyles);
+    tree.children?.forEach(
+        (child) => applyInlineStyles(child, shouldPreventInlineStyle));
     return tree;
   }
 

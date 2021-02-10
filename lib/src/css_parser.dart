@@ -2,11 +2,24 @@ import 'dart:ui';
 
 import 'package:csslib/visitor.dart' as css;
 import 'package:csslib/parser.dart' as cssparser;
+import 'package:csslib/visitor.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_html/style.dart';
 
-Style declarationsToStyle(Map<String, List<css.Expression>> declarations) {
+import 'html_elements.dart';
+
+typedef bool ShouldPreventInlineStyle(
+    StyledElement element, String property, List<Expression> expressions);
+
+Style declarationsToStyle(Map<String, List<css.Expression>> declarations,
+    {@required StyledElement element,
+    ShouldPreventInlineStyle shouldPreventInlineStyle}) {
   Style style = new Style();
   declarations.forEach((property, value) {
+    if (shouldPreventInlineStyle?.call(element, property, value) ?? false) {
+      return;
+    }
+
     switch (property) {
       case 'background-color':
         style.backgroundColor =
@@ -34,10 +47,12 @@ Style declarationsToStyle(Map<String, List<css.Expression>> declarations) {
   return style;
 }
 
-Style inlineCSSToStyle(String inlineStyle) {
+Style inlineCSSToStyle(StyledElement element, String inlineStyle,
+    {ShouldPreventInlineStyle shouldPreventInlineStyle}) {
   final sheet = cssparser.parse("*{$inlineStyle}");
   final declarations = DeclarationVisitor().getDeclarations(sheet);
-  return declarationsToStyle(declarations);
+  return declarationsToStyle(declarations,
+      element: element, shouldPreventInlineStyle: shouldPreventInlineStyle);
 }
 
 class DeclarationVisitor extends css.Visitor {
