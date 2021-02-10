@@ -14,6 +14,7 @@ import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as htmlparser;
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'src/element_marker.dart';
 import 'src/styled_element.dart';
 
 typedef OnTap = void Function(String url);
@@ -231,16 +232,11 @@ class HtmlParser extends StatelessWidget {
     return tree;
   }
 
-  InlineSpan parseTree(RenderContext context, StyledElement tree) {
-    return WidgetSpan(
-        child: MarkerSpan(child: _parseTree(context, tree), element: tree));
-  }
-
   /// [_parseTree] converts a tree of [StyledElement]s to an [InlineSpan] tree.
   ///
   /// [_parseTree] is responsible for handling the [customRender] parameter and
   /// deciding what different `Style.display` options look like as Widgets.
-  InlineSpan _parseTree(RenderContext context, StyledElement tree) {
+  InlineSpan parseTree(RenderContext context, StyledElement tree) {
     // Merge this element's style into the context so that children
     // inherit the correct style
     RenderContext newContext = RenderContext(
@@ -251,23 +247,26 @@ class HtmlParser extends StatelessWidget {
 
     if (customRender?.containsKey(tree.name) ?? false) {
       return WidgetSpan(
-        child: ContainerSpan(
-          newContext: newContext,
-          style: tree.style,
-          shrinkWrap: context.parser.shrinkWrap,
-          child: customRender[tree.name].call(
-            newContext,
-            ContainerSpan(
-              newContext: newContext,
-              style: tree.style,
-              shrinkWrap: context.parser.shrinkWrap,
-              children: tree.children
-                      ?.map((tree) => parseTree(newContext, tree))
-                      ?.toList() ??
-                  [],
+        child: ElementMarker(
+          element: tree,
+          child: ContainerSpan(
+            newContext: newContext,
+            style: tree.style,
+            shrinkWrap: context.parser.shrinkWrap,
+            child: customRender[tree.name].call(
+              newContext,
+              ContainerSpan(
+                newContext: newContext,
+                style: tree.style,
+                shrinkWrap: context.parser.shrinkWrap,
+                children: tree.children
+                        ?.map((tree) => parseTree(newContext, tree))
+                        ?.toList() ??
+                    [],
+              ),
+              tree.attributes,
+              tree.element,
             ),
-            tree.attributes,
-            tree.element,
           ),
         ),
       );
@@ -276,92 +275,105 @@ class HtmlParser extends StatelessWidget {
     //Return the correct InlineSpan based on the element type.
     if (tree.style?.display == Display.BLOCK) {
       return WidgetSpan(
-        child: ContainerSpan(
-          newContext: newContext,
-          style: tree.style,
-          shrinkWrap: context.parser.shrinkWrap,
-          children: tree.children
-                  ?.map((tree) => parseTree(newContext, tree))
-                  ?.toList() ??
-              [],
+        child: ElementMarker(
+          element: tree,
+          child: ContainerSpan(
+            newContext: newContext,
+            style: tree.style,
+            shrinkWrap: context.parser.shrinkWrap,
+            children: tree.children
+                    ?.map((tree) => parseTree(newContext, tree))
+                    ?.toList() ??
+                [],
+          ),
         ),
       );
     } else if (tree.style?.display == Display.LIST_ITEM) {
       return WidgetSpan(
-        child: ContainerSpan(
-          newContext: newContext,
-          style: tree.style,
-          shrinkWrap: context.parser.shrinkWrap,
-          child: Stack(
-            children: [
-              if (tree.style?.listStylePosition == ListStylePosition.OUTSIDE ||
-                  tree.style?.listStylePosition == null)
-                PositionedDirectional(
-                  width: 30, //TODO derive this from list padding.
-                  start: 0,
-                  child: Text('${newContext.style.markerContent}\t',
-                      textAlign: TextAlign.right,
-                      style: newContext.style.generateTextStyle()),
-                ),
-              Padding(
-                padding: EdgeInsetsDirectional.only(
-                    start: 30), //TODO derive this from list padding.
-                child: StyledText(
-                  textSpan: TextSpan(
-                    text: (tree.style?.listStylePosition ==
-                            ListStylePosition.INSIDE)
-                        ? '${newContext.style.markerContent}\t'
-                        : null,
-                    children: tree.children
-                            ?.map((tree) => parseTree(newContext, tree))
-                            ?.toList() ??
-                        [],
-                    style: newContext.style.generateTextStyle(),
+        child: ElementMarker(
+          element: tree,
+          child: ContainerSpan(
+            newContext: newContext,
+            style: tree.style,
+            shrinkWrap: context.parser.shrinkWrap,
+            child: Stack(
+              children: [
+                if (tree.style?.listStylePosition ==
+                        ListStylePosition.OUTSIDE ||
+                    tree.style?.listStylePosition == null)
+                  PositionedDirectional(
+                    width: 30, //TODO derive this from list padding.
+                    start: 0,
+                    child: Text('${newContext.style.markerContent}\t',
+                        textAlign: TextAlign.right,
+                        style: tree.style.generateTextContainerStyle()),
                   ),
-                  style: newContext.style,
-                ),
-              )
-            ],
+                Padding(
+                  padding: EdgeInsetsDirectional.only(
+                      start: 30), //TODO derive this from list padding.
+                  child: StyledText(
+                    textSpan: TextSpan(
+                      text: (tree.style?.listStylePosition ==
+                              ListStylePosition.INSIDE)
+                          ? '${newContext.style.markerContent}\t'
+                          : null,
+                      children: tree.children
+                              ?.map((tree) => parseTree(newContext, tree))
+                              ?.toList() ??
+                          [],
+                      style: tree.style.generateTextContainerStyle(),
+                    ),
+                    style: newContext.style,
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       );
     } else if (tree is ReplacedElement) {
       if (tree is TextContentElement) {
-        return TextSpan(text: tree.text);
+        final textStyle = tree.style.generateTextStyle();
+        // TODO: Mark position
+        return TextSpan(text: tree.text, style: textStyle);
       } else {
         return WidgetSpan(
           alignment: tree.alignment,
           baseline: TextBaseline.alphabetic,
-          child: tree.toWidget(context),
+          child: ElementMarker(element: tree, child: tree.toWidget(context)),
         );
       }
     } else if (tree is InteractableElement) {
       return WidgetSpan(
-        child: RawGestureDetector(
-          gestures: {
-            MultipleTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<
-                MultipleTapGestureRecognizer>(
-              () => MultipleTapGestureRecognizer(),
-              (instance) {
-                instance..onTap = () => onLinkTap?.call(tree.href);
-              },
+        child: ElementMarker(
+          element: tree,
+          child: RawGestureDetector(
+            gestures: {
+              MultipleTapGestureRecognizer:
+                  GestureRecognizerFactoryWithHandlers<
+                      MultipleTapGestureRecognizer>(
+                () => MultipleTapGestureRecognizer(),
+                (instance) {
+                  instance..onTap = () => onLinkTap?.call(tree.href);
+                },
+              ),
+            },
+            child: StyledText(
+              textSpan: TextSpan(
+                style: tree.style.generateTextContainerStyle(),
+                children: tree.children
+                        .map((tree) => parseTree(newContext, tree))
+                        .toList() ??
+                    [],
+              ),
+              style: newContext.style,
             ),
-          },
-          child: StyledText(
-            textSpan: TextSpan(
-              style: newContext.style.generateTextStyle(),
-              children: tree.children
-                      .map((tree) => parseTree(newContext, tree))
-                      .toList() ??
-                  [],
-            ),
-            style: newContext.style,
           ),
         ),
       );
     } else if (tree is LayoutElement) {
       return WidgetSpan(
-        child: tree.toWidget(context),
+        child: ElementMarker(element: tree, child: tree.toWidget(context)),
       );
     } else if (tree.style.verticalAlign != null &&
         tree.style.verticalAlign != VerticalAlign.BASELINE) {
@@ -378,24 +390,29 @@ class HtmlParser extends StatelessWidget {
       }
       //Requires special layout features not available in the TextStyle API.
       return WidgetSpan(
-        child: Transform.translate(
-          offset: Offset(0, verticalOffset),
-          child: StyledText(
-            textSpan: TextSpan(
-              style: newContext.style.generateTextStyle(),
-              children: tree.children
-                      .map((tree) => parseTree(newContext, tree))
-                      .toList() ??
-                  [],
+        child: ElementMarker(
+          element: tree,
+          child: Transform.translate(
+            offset: Offset(0, verticalOffset),
+            child: StyledText(
+              textSpan: TextSpan(
+                style: tree.style.generateTextContainerStyle(),
+                children: tree.children
+                        .map((tree) => parseTree(newContext, tree))
+                        .toList() ??
+                    [],
+              ),
+              style: newContext.style,
             ),
-            style: newContext.style,
           ),
         ),
       );
     } else {
       ///[tree] is an inline element.
+      final containerStyle = tree.style.generateTextContainerStyle();
+      // TODO: Mark position
       return TextSpan(
-        style: newContext.style.generateTextStyle(),
+        style: containerStyle,
         children:
             tree.children.map((tree) => parseTree(newContext, tree)).toList(),
       );
@@ -693,25 +710,6 @@ class RenderContext {
   });
 }
 
-/// A [MarkerSpan] is a widget that wraps an [InlineSpan].
-class MarkerSpan extends StatelessWidget {
-  final InlineSpan child;
-  final StyledElement element;
-
-  const MarkerSpan({Key key, @required this.child, @required this.element})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-        opacity: 1.0,
-        child: StyledText(
-          textSpan: child,
-          style: element.style,
-        ));
-  }
-}
-
 /// A [ContainerSpan] is a widget with an [InlineSpan] child or children.
 ///
 /// A [ContainerSpan] can have a border, background color, height, width, padding, and margin
@@ -746,7 +744,7 @@ class ContainerSpan extends StatelessWidget {
       child: child ??
           StyledText(
             textSpan: TextSpan(
-              style: newContext.style.generateTextStyle(),
+              style: newContext.style.generateTextContainerStyle(),
               children: children,
             ),
             style: newContext.style,

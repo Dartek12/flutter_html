@@ -237,6 +237,22 @@ class Style {
     );
   }
 
+  TextStyle generateTextContainerStyle() {
+    return TextStyle(
+      backgroundColor: backgroundColor,
+      color: color,
+      fontFamily: fontFamily,
+      fontFeatures: fontFeatureSettings,
+      fontSize: fontSize?.size,
+      fontStyle: fontStyle,
+      fontWeight: fontWeight,
+      letterSpacing: letterSpacing,
+      shadows: textShadow,
+      wordSpacing: wordSpacing,
+      height: lineHeight,
+    );
+  }
+
   @override
   String toString() {
     return "Style";
@@ -289,6 +305,10 @@ class Style {
     return child.copyWith(
       color: child.color ?? color,
       direction: child.direction ?? direction,
+      textDecoration: child.textDecoration ?? textDecoration,
+      textDecorationColor: child.textDecorationColor ?? textDecorationColor,
+      textDecorationThickness:
+          child.textDecorationThickness ?? textDecorationThickness,
       fontFamily: child.fontFamily ?? fontFamily,
       fontFeatureSettings: child.fontFeatureSettings ?? fontFeatureSettings,
       fontSize: child.fontSize ?? fontSize,

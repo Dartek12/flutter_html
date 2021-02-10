@@ -3,6 +3,7 @@ library flutter_html;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_html/html_parser.dart';
+import 'package:flutter_html/src/element_marker.dart';
 import 'package:flutter_html/style.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -135,7 +136,7 @@ class HtmlController {
     bool found = false;
 
     void visitor(Element element) {
-      final markerWidget = cast<MarkerSpan>(element.widget);
+      final markerWidget = cast<ElementMarker>(element.widget);
 
       if (markerWidget != null) {
         if (markerWidget.element.elementId == id) {

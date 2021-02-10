@@ -62,11 +62,12 @@ const htmlData = """
       <p>The should be <span style='color: rgb(0, 97, 0);'>GREEN style='color: rgb(0, 97, 0);</span></p>
       <p>The should be <span style='background-color: red; color: rgb(0, 97, 0);'>GREEN style='color: rgb(0, 97, 0);</span></p>
 
-
-      <p><span style="text-decoration: underline;">This should be underlined </span></p>
-      <p><span style="text-decoration: line-through;">This should be crossed out </span></p>
-      <p><span style="text-decoration: overline;">This should be overliend</span></p>
-      <p>This should be <span style="font-size: 32pt;">LARGE</span></p>
+      <div style="font-size: 20pt">
+        <p><span style="text-decoration: underline;">This should be underlined no matter which line it resides on</span></p>
+        <p><span style="text-decoration: line-through;">This should be crossed out no matter which line it resides on</span></p>
+        <p><span style="text-decoration: overline;">This should be overlined no matter which line it resides on</span></p>
+        <p>This should be <span style="font-size: 32pt;">LARGE</span></p>
+      </div>
 
       <p style="text-align: center;"><span style="color: rgba(0, 0, 0, 0.95);">blasdafjklasdlkjfkl</span></p>
       <p style="text-align: right;"><span style="color: rgba(0, 0, 0, 0.95);">blasdafjklasdlkjfkl</span></p>
@@ -77,7 +78,6 @@ const htmlData = """
       <p>
       <q>Famous quote...</q>
       </p>
-
 
       <table id="table" border="2">
         <thead>
@@ -194,15 +194,10 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Html(
           controller: _controller,
           data: htmlData,
-          //Optional parameters:
           style: {
             "html": Style(
-              backgroundColor: Colors.black12,
-//              color: Colors.white,
+              backgroundColor: Colors.transparent,
             ),
-//            "h1": Style(
-//              textAlign: TextAlign.center,
-//            ),
             "table": Style(
               backgroundColor: Color.fromARGB(0x50, 0xee, 0xee, 0xee),
             ),
