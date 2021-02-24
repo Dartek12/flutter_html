@@ -33,6 +33,10 @@ class StyledElement {
 
   dom.Element get element => _node;
 
+  void applyInheritedStyle(Style parentStyle) {
+    style = parentStyle.copyOnlyInherited(style);
+  }
+
   @override
   String toString() {
     String selfData =

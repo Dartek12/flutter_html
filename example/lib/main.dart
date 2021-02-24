@@ -61,7 +61,7 @@ const htmlData = """
       <p>The should be <span style='color: red;'>RED style='color: red;'</span></p>
       <p>The should be <span style='color: rgba(0, 0, 0, 0.10);'>BLACK with 10% alpha style='color: rgba(0, 0, 0, 0.10);</span></p>
       <p>The should be <span style='color: rgb(0, 97, 0);'>GREEN style='color: rgb(0, 97, 0);</span></p>
-      <p>The should be <span style='background-color: red; color: rgb(0, 97, 0);'>GREEN style='color: rgb(0, 97, 0);</span></p>
+      <p style="color: blue;">The text should be orange and then <span style='background-color: red;'>have red background;</span></p>
 
       <div style="font-size: 20pt">
         <p><span style="text-decoration: underline;">This should be underlined no matter which line it resides on</span></p>

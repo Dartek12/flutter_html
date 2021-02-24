@@ -59,6 +59,11 @@ class TextContentElement extends ReplacedElement {
   }) : super(elementId: elementId, name: "[text]", style: style);
 
   @override
+  void applyInheritedStyle(Style parentStyle) {
+    this.style = parentStyle.copyWith()..display = null;
+  }
+
+  @override
   String toString() {
     return "\"${text.replaceAll("\n", "\\n")}\"";
   }

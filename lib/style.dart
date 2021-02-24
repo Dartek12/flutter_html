@@ -6,11 +6,15 @@ import 'package:numerus/numerus.dart';
 ///This class represents all the available CSS attributes
 ///for this package.
 class Style {
+  Color _backgroundColor;
+
   /// CSS attribute "`background-color`"
   ///
   /// Inherited: no,
   /// Default: Colors.transparent,
-  Color backgroundColor;
+  Color get backgroundColor => _backgroundColor ?? Colors.transparent;
+
+  set backgroundColor(Color color) => _backgroundColor = color;
 
   /// CSS attribute "`color`"
   ///
@@ -177,7 +181,7 @@ class Style {
   String markerContent;
 
   Style({
-    this.backgroundColor = Colors.transparent,
+    Color backgroundColor,
     this.color,
     this.direction,
     this.display,
@@ -209,6 +213,7 @@ class Style {
     this.alignment,
     this.markerContent,
   }) {
+    this._backgroundColor = backgroundColor;
     if (this.alignment == null &&
         (display == Display.BLOCK || display == Display.LIST_ITEM)) {
       this.alignment = Alignment.centerLeft;
@@ -262,7 +267,7 @@ class Style {
     if (other == null) return this;
 
     return copyWith(
-      backgroundColor: other.backgroundColor,
+      backgroundColor: other._backgroundColor,
       color: other.color,
       direction: other.direction,
       display: other.display,
@@ -304,6 +309,7 @@ class Style {
 
     return child.copyWith(
       color: child.color ?? color,
+      backgroundColor: child._backgroundColor ?? _backgroundColor,
       direction: child.direction ?? direction,
       textDecoration: child.textDecoration ?? textDecoration,
       textDecorationColor: child.textDecorationColor ?? textDecorationColor,
@@ -358,7 +364,7 @@ class Style {
     String markerContent,
   }) {
     return Style(
-      backgroundColor: backgroundColor ?? this.backgroundColor,
+      backgroundColor: backgroundColor ?? this._backgroundColor,
       color: color ?? this.color,
       direction: direction ?? this.direction,
       display: display ?? this.display,

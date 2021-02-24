@@ -218,7 +218,7 @@ class HtmlParser extends StatelessWidget {
   /// child that doesn't specify a different style.
   StyledElement _cascadeStyles(StyledElement tree) {
     tree.children?.forEach((child) {
-      child.style = tree.style.copyOnlyInherited(child.style);
+      child.applyInheritedStyle(tree.style);
       _cascadeStyles(child);
     });
 
