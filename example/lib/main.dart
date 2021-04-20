@@ -180,6 +180,7 @@ const htmlData = """
 """;
 
 class _MyHomePageState extends State<MyHomePage> {
+  final _scrollController = ScrollController();
   final _controller = HtmlController();
 
   @override
@@ -196,6 +197,7 @@ class _MyHomePageState extends State<MyHomePage> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         child: Html(
           controller: _controller,
           data: htmlData,
@@ -234,7 +236,8 @@ class _MyHomePageState extends State<MyHomePage> {
             print("Opening $url...");
             if (url.isNotEmpty && url[0] == '#') {
               _controller.scrollTo(url.substring(1),
-                  duration: const Duration(seconds: 1));
+                  duration: const Duration(seconds: 1),
+                  controller: _scrollController);
             }
           },
           onImageTap: (src) {

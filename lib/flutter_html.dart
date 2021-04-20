@@ -129,7 +129,8 @@ class HtmlController {
   _HtmlState _state;
 
   void scrollTo(String id,
-      {Duration duration = Duration.zero,
+      {@required ScrollController controller,
+      Duration duration = Duration.zero,
       double alignment = 0.0,
       Curve curve = Curves.ease,
       ScrollPositionAlignmentPolicy alignmentPolicy =
@@ -147,11 +148,18 @@ class HtmlController {
       if (markerWidget != null) {
         if (markerWidget.element.elementId == id) {
           found = true;
-          Scrollable.ensureVisible(element,
-              duration: duration,
-              curve: curve,
-              alignment: alignment,
-              alignmentPolicy: alignmentPolicy);
+          final rb = element.findRenderObject() as RenderBox;
+          final scrollable = Scrollable.of(element);
+          final offset = rb.localToGlobal(Offset.zero,
+              ancestor: scrollable.context.findRenderObject());
+          final scale = MediaQuery.of(context).textScaleFactor;
+          final scaledOffset = offset * scale;
+
+          controller.animateTo(
+            scaledOffset.dy,
+            curve: curve,
+            duration: duration,
+          );
           return;
         }
       }
