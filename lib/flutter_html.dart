@@ -149,14 +149,21 @@ class HtmlController {
         if (markerWidget.element.elementId == id) {
           found = true;
           final rb = element.findRenderObject() as RenderBox;
-          final scrollable = Scrollable.of(element);
-          final offset = rb.localToGlobal(Offset.zero,
-              ancestor: scrollable.context.findRenderObject());
-          final scale = MediaQuery.of(context).textScaleFactor;
-          final scaledOffset = offset * scale;
+          final parentRenderBox =
+              _state.context.findRenderObject() as RenderBox;
+
+          double parentOffset = 0.0;
+          final flexData = cast<FlexParentData>(parentRenderBox.parentData);
+          if (flexData != null) {
+            parentOffset = flexData.offset.dy;
+          }
+          final offset =
+              rb.localToGlobal(Offset.zero, ancestor: parentRenderBox);
+          final offsetY = offset.dy * MediaQuery.of(context).textScaleFactor;
+          final targetOffsetY = parentOffset + offsetY;
 
           controller.animateTo(
-            scaledOffset.dy,
+            targetOffsetY,
             curve: curve,
             duration: duration,
           );

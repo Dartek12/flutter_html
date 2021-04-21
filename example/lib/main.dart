@@ -198,54 +198,59 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: SingleChildScrollView(
         controller: _scrollController,
-        child: Html(
-          controller: _controller,
-          data: htmlData,
-          style: {
-            "html": Style(
-              backgroundColor: Colors.transparent,
+        child: Column(
+          children: [
+            Html(
+              controller: _controller,
+              data: htmlData,
+              style: {
+                "html": Style(
+                  backgroundColor: Colors.transparent,
+                ),
+                "table": Style(
+                  backgroundColor: Color.fromARGB(0x50, 0xee, 0xee, 0xee),
+                ),
+                "tr": Style(
+                  border: Border(bottom: BorderSide(color: Colors.grey)),
+                ),
+                "th": Style(
+                  padding: EdgeInsets.all(6),
+                  backgroundColor: Colors.grey,
+                ),
+                "td": Style(
+                  padding: EdgeInsets.all(6),
+                  alignment: Alignment.topLeft,
+                ),
+                "var": Style(fontFamily: 'serif'),
+              },
+              customRender: {
+                "flutter":
+                    (RenderContext context, Widget child, attributes, _) {
+                  return FlutterLogo(
+                    style: (attributes['horizontal'] != null)
+                        ? FlutterLogoStyle.horizontal
+                        : FlutterLogoStyle.markOnly,
+                    textColor: context.style.color,
+                    size: context.style.fontSize.size * 5,
+                  );
+                },
+              },
+              onLinkTap: (url) {
+                print("Opening $url...");
+                if (url.isNotEmpty && url[0] == '#') {
+                  _controller.scrollTo(url.substring(1),
+                      duration: const Duration(seconds: 1),
+                      controller: _scrollController);
+                }
+              },
+              onImageTap: (src) {
+                print(src);
+              },
+              onImageError: (exception, stackTrace) {
+                print(exception);
+              },
             ),
-            "table": Style(
-              backgroundColor: Color.fromARGB(0x50, 0xee, 0xee, 0xee),
-            ),
-            "tr": Style(
-              border: Border(bottom: BorderSide(color: Colors.grey)),
-            ),
-            "th": Style(
-              padding: EdgeInsets.all(6),
-              backgroundColor: Colors.grey,
-            ),
-            "td": Style(
-              padding: EdgeInsets.all(6),
-              alignment: Alignment.topLeft,
-            ),
-            "var": Style(fontFamily: 'serif'),
-          },
-          customRender: {
-            "flutter": (RenderContext context, Widget child, attributes, _) {
-              return FlutterLogo(
-                style: (attributes['horizontal'] != null)
-                    ? FlutterLogoStyle.horizontal
-                    : FlutterLogoStyle.markOnly,
-                textColor: context.style.color,
-                size: context.style.fontSize.size * 5,
-              );
-            },
-          },
-          onLinkTap: (url) {
-            print("Opening $url...");
-            if (url.isNotEmpty && url[0] == '#') {
-              _controller.scrollTo(url.substring(1),
-                  duration: const Duration(seconds: 1),
-                  controller: _scrollController);
-            }
-          },
-          onImageTap: (src) {
-            print(src);
-          },
-          onImageError: (exception, stackTrace) {
-            print(exception);
-          },
+          ],
         ),
       ),
     );
